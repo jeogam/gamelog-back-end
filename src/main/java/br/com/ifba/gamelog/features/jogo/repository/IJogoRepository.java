@@ -3,10 +3,12 @@ package br.com.ifba.gamelog.features.jogo.repository;
 import br.com.ifba.gamelog.features.jogo.model.Jogo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.List;
+
+import java.util.UUID;
 
 @Repository
-public interface JogoRepository extends JpaRepository<Jogo, Long> {
-    // Busca customizada para atender ao requisito de pesquisa por nome
-    List<Jogo> findByTituloContainingIgnoreCase(String titulo);
+public interface IJogoRepository extends JpaRepository<Jogo, UUID> {
+
+    // Verifica unicidade do ID externo (ex: ID da API IGDB/Steam)
+    boolean existsByIdExterno(Long idExterno);
 }
