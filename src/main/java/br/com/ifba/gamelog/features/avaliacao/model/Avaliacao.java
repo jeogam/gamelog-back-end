@@ -16,7 +16,7 @@ import lombok.*;
 public class Avaliacao extends PersistenceEntity {
 
     @Column(nullable = false)
-    private Integer nota; // 1 a 5
+    private Integer nota;
 
     @Column(columnDefinition = "TEXT")
     private String comentario;

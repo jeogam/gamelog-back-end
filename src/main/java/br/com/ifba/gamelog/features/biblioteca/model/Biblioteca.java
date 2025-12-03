@@ -8,7 +8,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "biblioteca", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"usuario_id", "jogo_id"}) // Garante que o user não tenha o mesmo jogo 2x na lib
+        @UniqueConstraint(columnNames = {"usuario_id", "jogo_id"})
 })
 @Getter
 @Setter
@@ -19,13 +19,12 @@ public class Biblioteca extends PersistenceEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private StatusJogo status;
+    private StatusJogo status; // Enum: QUERO_JOGAR, JOGANDO, ZERADO, ABANDONADO
 
     @Column(name = "favorito", nullable = false)
     private boolean favorito = false;
 
-    // 'atualizadoEm' removido, usará o 'updatedAt' da PersistenceEntity
-
+    // Relacionamentos Lazy para performance
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
