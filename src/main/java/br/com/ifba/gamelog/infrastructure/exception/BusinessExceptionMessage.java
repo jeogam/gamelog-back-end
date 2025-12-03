@@ -2,6 +2,7 @@ package br.com.ifba.gamelog.infrastructure.exception;
 
 /**
  * Enum que define as mensagens de erro de negócio do GameLog.
+ * Utilizado para padronizar o retorno de exceções via GlobalExceptionHandler.
  */
 public enum BusinessExceptionMessage {
 
@@ -24,7 +25,13 @@ public enum BusinessExceptionMessage {
         return message;
     }
 
-    // Método utilitário para formatar mensagens dinâmicas (ex: "O email já existe")
+    /**
+     * Método utilitário para formatar mensagens dinâmicas.
+     * Exemplo: getAttributeValueAlreadyExistsMessage("Email") -> "O valor do atributo 'Email' já está em uso."
+     *
+     * @param attribute O nome do campo/atributo para formatar na mensagem.
+     * @return A mensagem formatada.
+     */
     public String getAttributeValueAlreadyExistsMessage(String attribute) {
         return String.format(message, attribute);
     }

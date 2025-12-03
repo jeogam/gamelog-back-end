@@ -9,6 +9,7 @@ import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import br.com.ifba.gamelog.infrastructure.util.ObjectMapperUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 /**
  * Serviço responsável pela lógica de negócio dos usuários.
+ * Gerencia a criação, atualização, listagem e remoção de usuários (Gamers).
  *
  * @author Seu Nome
  */
@@ -27,12 +29,18 @@ public class UsuarioService implements IUsuarioService {
     private final IUsuarioRepository repository;
     private final ObjectMapperUtil objectMapperUtil;
 
+    // Injeção do PasswordEncoder para criptografar senhas antes de salvar
+    private final PasswordEncoder passwordEncoder;
+
     /**
-     * Cria um novo usuário, verificando unicidade de email.
+     * Cria um novo usuário no sistema.
+     * <p>
+     * Valida se o email já existe e criptografa a senha antes de persistir.
+     * </p>
      *
-     * @param dto Dados de entrada.
-     * @return DTO do usuário salvo.
-     * @throws BusinessException se o email já estiver em uso.
+     * @param dto Dados de entrada para criação do usuário.
+     * @return DTO contendo os dados do usuário salvo (sem a senha).
+     * @throws BusinessException se o email já estiver cadastrado.
      */
     @Override
     @Transactional
@@ -42,15 +50,19 @@ public class UsuarioService implements IUsuarioService {
         }
 
         Usuario entity = objectMapperUtil.map(dto, Usuario.class);
+
+        // Criptografia da senha antes de salvar no banco
+        entity.setSenha(passwordEncoder.encode(dto.senha()));
+
         Usuario savedEntity = repository.save(entity);
 
         return objectMapperUtil.map(savedEntity, UsuarioResponseDTO.class);
     }
 
     /**
-     * Retorna todos os usuários.
+     * Recupera a lista completa de usuários cadastrados.
      *
-     * @return Lista de usuários.
+     * @return Lista de DTOs de resposta dos usuários.
      */
     @Override
     @Transactional(readOnly = true)
@@ -59,11 +71,11 @@ public class UsuarioService implements IUsuarioService {
     }
 
     /**
-     * Busca usuário por ID.
+     * Busca um usuário específico pelo seu ID.
      *
-     * @param id UUID do usuário.
-     * @return DTO do usuário.
-     * @throws BusinessException se não encontrado.
+     * @param id O identificador único (UUID) do usuário.
+     * @return DTO com os dados do usuário encontrado.
+     * @throws BusinessException se o usuário não for encontrado.
      */
     @Override
     @Transactional(readOnly = true)
@@ -74,10 +86,15 @@ public class UsuarioService implements IUsuarioService {
     }
 
     /**
-     * Atualiza dados do usuário. Verifica conflito de email caso o email seja alterado.
+     * Atualiza os dados de um usuário existente.
+     * <p>
+     * Se o e-mail for alterado, verifica se o novo e-mail já está em uso por outro usuário.
+     * Se uma nova senha for fornecida, ela será criptografada antes de ser salva.
+     * </p>
      *
-     * @param dto Dados atualizados.
-     * @return Usuário atualizado.
+     * @param dto Dados atualizados do usuário.
+     * @return DTO com os dados do usuário após a atualização.
+     * @throws BusinessException se o usuário não existir ou se o novo e-mail já estiver em uso.
      */
     @Override
     @Transactional
@@ -85,7 +102,7 @@ public class UsuarioService implements IUsuarioService {
         Usuario usuarioExistente = repository.findById(dto.id())
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
-        // Verifica se trocou de email e se o novo já existe em OUTRO usuário
+        // Validação de duplicidade de email na atualização
         if (!usuarioExistente.getEmail().equals(dto.email()) && repository.existsByEmail(dto.email())) {
             throw new BusinessException(BusinessExceptionMessage.ATTRIBUTE_VALUE_ALREADY_EXISTS.getAttributeValueAlreadyExistsMessage("Email"));
         }
@@ -93,8 +110,9 @@ public class UsuarioService implements IUsuarioService {
         usuarioExistente.setNome(dto.nome());
         usuarioExistente.setEmail(dto.email());
 
+        // Se o usuário enviou uma senha nova (não nula/vazia), criptografa e atualiza.
         if (dto.senha() != null && !dto.senha().isBlank()) {
-            usuarioExistente.setSenha(dto.senha());
+            usuarioExistente.setSenha(passwordEncoder.encode(dto.senha()));
         }
 
         Usuario updatedEntity = repository.save(usuarioExistente);
@@ -102,10 +120,11 @@ public class UsuarioService implements IUsuarioService {
     }
 
     /**
-     * Remove um usuário.
+     * Remove um usuário do sistema.
      *
-     * @param id UUID a deletar.
-     * @return O ID deletado.
+     * @param id O identificador único (UUID) do usuário a ser removido.
+     * @return O UUID do usuário que foi deletado.
+     * @throws BusinessException se o usuário não for encontrado.
      */
     @Override
     @Transactional
