@@ -1,4 +1,4 @@
-package br.com.ifba.gamelog.infrastructure;
+package br.com.ifba.gamelog.infrastructure.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

@@ -3,12 +3,11 @@ package br.com.ifba.gamelog.features.usuario.model;
 import br.com.ifba.gamelog.features.avaliacao.model.Avaliacao;
 import br.com.ifba.gamelog.features.biblioteca.model.Biblioteca;
 import br.com.ifba.gamelog.features.lista.model.ListaPersonalizada;
-import br.com.ifba.gamelog.infrastructure.PersistenceEntity;
+import br.com.ifba.gamelog.infrastructure.model.PersistenceEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -17,6 +16,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true) // Importante para herança
 public class Usuario extends PersistenceEntity {
 
     @Column(name = "nome", nullable = false)
@@ -28,22 +28,18 @@ public class Usuario extends PersistenceEntity {
     @Column(name = "senha", nullable = false)
     private String senha;
 
-    @Column(name = "criado_em", nullable = false)
-    private LocalDateTime criadoEm;
+    // 'criadoEm' foi removido pois já existe na PersistenceEntity como 'createdAt'
 
-    // --- Relacionamentos baseados no diagrama ---
+    // --- Relacionamentos ---
 
-    // 1 Usuario possui N itens na Biblioteca
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Biblioteca> biblioteca;
 
-    // 1 Usuario escreve N Avaliacoes
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Avaliacao> avaliacoes;
 
-    // 1 Usuario cria N Listas Personalizadas
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<ListaPersonalizada> listasCriadas;

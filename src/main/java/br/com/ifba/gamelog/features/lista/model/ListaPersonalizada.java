@@ -2,7 +2,7 @@ package br.com.ifba.gamelog.features.lista.model;
 
 import br.com.ifba.gamelog.features.jogo.model.Jogo;
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
-import br.com.ifba.gamelog.infrastructure.PersistenceEntity;
+import br.com.ifba.gamelog.infrastructure.model.PersistenceEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +14,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ListaPersonalizada extends PersistenceEntity {
 
     @Column(nullable = false)
@@ -22,12 +23,10 @@ public class ListaPersonalizada extends PersistenceEntity {
     @Column(nullable = false)
     private boolean publica = true;
 
-    // Relacionamento N para 1 com Usuario (Quem criou a lista)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    // Relacionamento N para N com Jogo (A lista contém vários jogos)
     @ManyToMany
     @JoinTable(
             name = "itens_lista",
