@@ -1,5 +1,7 @@
 package br.com.ifba.gamelog.features.jogo.controller;
 
+import br.com.ifba.gamelog.features.jogo.client.RawgApiClient; // 👈 NOVO IMPORT
+import br.com.ifba.gamelog.features.jogo.client.RawgGameDetailResponse; // 👈 NOVO IMPORT
 import br.com.ifba.gamelog.features.jogo.dto.request.JogoAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.jogo.dto.request.JogoCriarRequestDTO;
 import br.com.ifba.gamelog.features.jogo.dto.response.JogoResponseDTO;
@@ -17,6 +19,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // 👈 NOVO IMPORT
+import org.springframework.data.domain.Pageable; // 👈 NOVO IMPORT
+import org.springframework.data.web.PageableDefault; // 👈 NOVO IMPORT
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +35,7 @@ import java.util.UUID;
  * Controlador REST responsável pelo gerenciamento de jogos do catálogo.
  * <p>
  * Expõe endpoints para adicionar, listar, atualizar e excluir jogos.
+ * Inclui funcionalidade de busca externa (RAWG) e listagem paginada.
  * </p>
  *
  * @author Seu Nome
@@ -44,18 +50,20 @@ import java.util.UUID;
 public class JogoController {
 
     private final IJogoService jogoService;
+    private final RawgApiClient rawgApiClient; // 👈 Injeção do cliente RAWG
 
     /**
-     * Adiciona um novo jogo ao catálogo.
+     * Adiciona um novo jogo ao catálogo, utilizando o ID Externo para buscar dados na RAWG.
      *
-     * @param jogoDto DTO contendo os dados do jogo.
+     * @param jogoDto DTO contendo o ID Externo e dados básicos do jogo.
      * @param result  Resultado da validação.
      * @return Um {@link ResponseEntity} com status 201 Created ou erros.
      */
-    @Operation(summary = "Adicionar Jogo", description = "Cadastra um novo jogo no catálogo. O ID Externo deve ser único.")
+    @Operation(summary = "Adicionar Jogo", description = "Cadastra um novo jogo no catálogo. O ID Externo deve ser único e é usado para buscar metadados na RAWG.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Jogo cadastrado com sucesso."),
-            @ApiResponse(responseCode = "422", description = "Erro de validação ou ID Externo duplicado.")
+            @ApiResponse(responseCode = "422", description = "Erro de validação ou ID Externo duplicado."),
+            @ApiResponse(responseCode = "404", description = "Dados do jogo não encontrados na API externa.")
     })
     @PostMapping(value = "/jogo",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -75,11 +83,11 @@ public class JogoController {
     }
 
     /**
-     * Recupera todos os jogos do catálogo.
+     * Recupera todos os jogos do catálogo (sem paginação).
      *
      * @return Lista de jogos.
      */
-    @Operation(summary = "Listar Todos os Jogos", description = "Recupera uma lista de todos os jogos cadastrados.")
+    @Operation(summary = "Listar Todos os Jogos (Não Paginado)", description = "Recupera uma lista de todos os jogos cadastrados. Use /paginado para grandes volumes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso.",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = JogoResponseDTO.class))))
@@ -87,6 +95,40 @@ public class JogoController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<JogoResponseDTO>> findAll() {
         return ResponseEntity.ok(jogoService.findAll());
+    }
+
+    /**
+     * Recupera jogos do catálogo com paginação e ordenação.
+     *
+     * @param pageable Parâmetros de paginação (page, size, sort).
+     * @return Uma página de jogos.
+     */
+    @Operation(summary = "Listar Jogos Paginado", description = "Recupera uma lista de jogos com paginação e ordenação.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
+                    content = @Content(schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping(value = "/paginado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<JogoResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "titulo") Pageable pageable) {
+        return ResponseEntity.ok(jogoService.findAllPaged(pageable));
+    }
+
+    /**
+     * Pesquisa jogos na API Externa (RAWG) pelo nome.
+     *
+     * @param nome Termo de busca (query string).
+     * @return Lista de DTOs com dados básicos dos jogos encontrados na API externa.
+     */
+    @Operation(summary = "Pesquisar Jogos Externos", description = "Busca jogos na API RAWG. A resposta pode ser usada para selecionar um jogo para importação (POST /jogo).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pesquisa realizada com sucesso.")
+    })
+    @GetMapping(value = "/pesquisar-externo", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<RawgGameDetailResponse>> searchExternalGames(@RequestParam String nome) {
+        // Uso de .block() em controller síncrono para simplificar a integração com WebClient reativo.
+        List<RawgGameDetailResponse> results = rawgApiClient.searchGames(nome).block();
+        return ResponseEntity.ok(results);
     }
 
     /**
