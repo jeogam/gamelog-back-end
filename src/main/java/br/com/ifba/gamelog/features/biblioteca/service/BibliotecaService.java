@@ -12,6 +12,8 @@ import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // NOVO IMPORT
+import org.springframework.data.domain.Pageable; // NOVO IMPORT
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,6 +78,19 @@ public class BibliotecaService implements IBibliotecaService {
         return repository.findAll().stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    /**
+     * Lista todos os itens de biblioteca do sistema com suporte a paginação.
+     *
+     * @param pageable Configurações de paginação (página, tamanho, ordenação).
+     * @return Uma página de DTOs de itens de biblioteca.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BibliotecaResponseDTO> findAllPaged(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     /**

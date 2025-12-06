@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Adicionado import
+import org.springframework.data.domain.Pageable; // Adicionado import
+import org.springframework.data.web.PageableDefault; // Adicionado import
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -75,11 +78,11 @@ public class UsuarioController {
     }
 
     /**
-     * Recupera a lista de todos os usuários cadastrados.
+     * Recupera a lista de todos os usuários cadastrados (Não paginado).
      *
      * @return Uma lista de DTOs de resposta de usuários.
      */
-    @Operation(summary = "Listar Todos os Usuários", description = "Recupera uma lista de todos os usuários cadastrados.")
+    @Operation(summary = "Listar Todos os Usuários", description = "Recupera uma lista de todos os usuários cadastrados. Use /paginado para grandes volumes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso.",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
@@ -87,6 +90,23 @@ public class UsuarioController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UsuarioResponseDTO>> findAll() {
         return ResponseEntity.ok(usuarioService.findAll());
+    }
+
+    /**
+     * Recupera uma lista de usuários com paginação e ordenação.
+     *
+     * @param pageable Parâmetros de paginação (page, size, sort).
+     * @return Uma página de DTOs de resposta de usuários.
+     */
+    @Operation(summary = "Listar Usuários Paginado", description = "Recupera uma lista de usuários com paginação e ordenação (padrão: 10 itens por página, ordenado por nome).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
+                    content = @Content(schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping(value = "/paginado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<UsuarioResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return ResponseEntity.ok(usuarioService.findAllPaged(pageable));
     }
 
     /**

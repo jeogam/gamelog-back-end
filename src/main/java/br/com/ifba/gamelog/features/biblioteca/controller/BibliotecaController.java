@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // NOVO IMPORT
+import org.springframework.data.domain.Pageable; // NOVO IMPORT
+import org.springframework.data.web.PageableDefault; // NOVO IMPORT
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -78,7 +81,7 @@ public class BibliotecaController {
      *
      * @return Lista completa de itens de biblioteca.
      */
-    @Operation(summary = "Listar Tudo", description = "Lista todos os itens de biblioteca do sistema (Admin).")
+    @Operation(summary = "Listar Tudo (Não Paginado)", description = "Lista todos os itens de biblioteca do sistema (Admin). Use /paginado para grandes volumes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso.",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = BibliotecaResponseDTO.class))))
@@ -86,6 +89,23 @@ public class BibliotecaController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<BibliotecaResponseDTO>> findAll() {
         return ResponseEntity.ok(bibliotecaService.findAll());
+    }
+
+    /**
+     * Recupera todos os itens de biblioteca cadastrados no sistema com paginação.
+     *
+     * @param pageable Parâmetros de paginação (page, size, sort).
+     * @return Uma página de itens de biblioteca.
+     */
+    @Operation(summary = "Listar Tudo Paginado", description = "Lista todos os itens de biblioteca do sistema com paginação (padrão: 10 itens por página, ordenado por título do jogo).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
+                    content = @Content(schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping(value = "/paginado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<BibliotecaResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "jogo.titulo") Pageable pageable) {
+        return ResponseEntity.ok(bibliotecaService.findAllPaged(pageable));
     }
 
     /**

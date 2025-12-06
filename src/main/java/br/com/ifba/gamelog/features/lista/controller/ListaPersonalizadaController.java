@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // NOVO IMPORT
+import org.springframework.data.domain.Pageable; // NOVO IMPORT
+import org.springframework.data.web.PageableDefault; // NOVO IMPORT
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,11 +68,11 @@ public class ListaPersonalizadaController {
     }
 
     /**
-     * Recupera todas as listas cadastradas no sistema.
+     * Recupera todas as listas cadastradas no sistema (Não paginado).
      *
      * @return Lista de todas as listas.
      */
-    @Operation(summary = "Listar Todas", description = "Recupera todas as listas do sistema.")
+    @Operation(summary = "Listar Todas", description = "Recupera todas as listas do sistema. Use /paginado para grandes volumes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Listas recuperadas com sucesso.",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ListaPersonalizadaResponseDTO.class))))
@@ -78,6 +81,24 @@ public class ListaPersonalizadaController {
     public ResponseEntity<List<ListaPersonalizadaResponseDTO>> findAll() {
         return ResponseEntity.ok(listaService.findAll());
     }
+
+    /**
+     * Recupera todas as listas cadastradas no sistema com paginação.
+     *
+     * @param pageable Parâmetros de paginação (page, size, sort).
+     * @return Uma página de listas.
+     */
+    @Operation(summary = "Listar Paginado", description = "Recupera todas as listas do sistema com paginação (padrão: 10 itens por página, ordenado por nome).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
+                    content = @Content(schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping(value = "/paginado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<ListaPersonalizadaResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return ResponseEntity.ok(listaService.findAllPaged(pageable));
+    }
+
 
     /**
      * Recupera os detalhes de uma lista específica.

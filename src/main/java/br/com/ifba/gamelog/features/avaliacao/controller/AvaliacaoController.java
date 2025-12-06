@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // NOVO IMPORT
+import org.springframework.data.domain.Pageable; // NOVO IMPORT
+import org.springframework.data.web.PageableDefault; // NOVO IMPORT
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -71,15 +74,33 @@ public class AvaliacaoController {
     }
 
     /**
-     * Lista todas as avaliações do sistema.
+     * Lista todas as avaliações do sistema (Não paginado).
      *
      * @return Lista de avaliações.
      */
-    @Operation(summary = "Listar Avaliações", description = "Recupera todas as avaliações cadastradas.")
+    @Operation(summary = "Listar Avaliações", description = "Recupera todas as avaliações cadastradas. Use /paginado para grandes volumes.")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<AvaliacaoResponseDTO>> findAll() {
         return ResponseEntity.ok(avaliacaoService.findAll());
     }
+
+    /**
+     * Recupera avaliações do sistema com paginação e ordenação.
+     *
+     * @param pageable Parâmetros de paginação (page, size, sort).
+     * @return Uma página de avaliações.
+     */
+    @Operation(summary = "Listar Avaliações Paginado", description = "Recupera uma lista de avaliações com paginação e ordenação (padrão: 10 itens por página, ordenado por data de criação).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
+                    content = @Content(schema = @Schema(implementation = Page.class)))
+    })
+    @GetMapping(value = "/paginado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<AvaliacaoResponseDTO>> findAllPaged(
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(avaliacaoService.findAllPaged(pageable));
+    }
+
 
     /**
      * Busca uma avaliação pelo ID.

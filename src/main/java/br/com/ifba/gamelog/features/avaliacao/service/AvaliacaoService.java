@@ -12,6 +12,8 @@ import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +82,19 @@ public class AvaliacaoService implements IAvaliacaoService {
         return repository.findAll().stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    /**
+     * Lista as avaliações do sistema com suporte a paginação.
+     *
+     * @param pageable Configurações de paginação (página, tamanho, ordenação).
+     * @return Uma página de DTOs de avaliações.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AvaliacaoResponseDTO> findAllPaged(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     /**

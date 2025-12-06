@@ -9,6 +9,8 @@ import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import br.com.ifba.gamelog.infrastructure.util.ObjectMapperUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page; // Adicionado import
+import org.springframework.data.domain.Pageable; // Adicionado import
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,7 @@ public class UsuarioService implements IUsuarioService {
     }
 
     /**
-     * Recupera a lista completa de usuários cadastrados.
+     * Recupera a lista completa de usuários cadastrados (Não paginado).
      *
      * @return Lista de DTOs de resposta dos usuários.
      */
@@ -69,6 +71,20 @@ public class UsuarioService implements IUsuarioService {
     public List<UsuarioResponseDTO> findAll() {
         return objectMapperUtil.mapAll(repository.findAll(), UsuarioResponseDTO.class);
     }
+
+    /**
+     * Recupera uma página de usuários cadastrados.
+     *
+     * @param pageable Configurações de paginação (página, tamanho, ordenação).
+     * @return Uma página de DTOs de resposta dos usuários.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UsuarioResponseDTO> findAllPaged(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(entity -> objectMapperUtil.map(entity, UsuarioResponseDTO.class));
+    }
+
 
     /**
      * Busca um usuário específico pelo seu ID.

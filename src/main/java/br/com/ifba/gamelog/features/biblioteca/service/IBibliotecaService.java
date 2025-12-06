@@ -3,6 +3,8 @@ package br.com.ifba.gamelog.features.biblioteca.service;
 import br.com.ifba.gamelog.features.biblioteca.dto.request.BibliotecaAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.biblioteca.dto.request.BibliotecaCriarRequestDTO;
 import br.com.ifba.gamelog.features.biblioteca.dto.response.BibliotecaResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +23,13 @@ public interface IBibliotecaService {
      * @return Lista de todos os jogos salvos por todos os usuários.
      */
     List<BibliotecaResponseDTO> findAll();
+
+    /**
+     * Lista todos os itens de biblioteca do sistema com suporte a paginação.
+     * @param pageable Parâmetros de paginação.
+     * @return Uma página de DTOs.
+     */
+    Page<BibliotecaResponseDTO> findAllPaged(Pageable pageable); // NOVO MÉTODO
 
     /**
      * Busca um item específico da biblioteca pelo seu ID.

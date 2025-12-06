@@ -3,6 +3,8 @@ package br.com.ifba.gamelog.features.lista.service;
 import br.com.ifba.gamelog.features.lista.dto.request.ListaPersonalizadaAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.lista.dto.request.ListaPersonalizadaCriarRequestDTO;
 import br.com.ifba.gamelog.features.lista.dto.response.ListaPersonalizadaResponseDTO;
+import org.springframework.data.domain.Page; // Adicionado import
+import org.springframework.data.domain.Pageable; // Adicionado import
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +23,13 @@ public interface IListaPersonalizadaService {
      * @return Lista de DTOs.
      */
     List<ListaPersonalizadaResponseDTO> findAll();
+
+    /**
+     * Lista todas as listas do sistema com suporte a paginação.
+     * @param pageable Parâmetros de paginação.
+     * @return Uma página de DTOs.
+     */
+    Page<ListaPersonalizadaResponseDTO> findAllPaged(Pageable pageable); // NOVO MÉTODO
 
     /**
      * Lista as listas de um usuário específico.
