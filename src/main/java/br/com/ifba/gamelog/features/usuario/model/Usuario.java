@@ -16,7 +16,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true) // Importante para herança
+@EqualsAndHashCode(callSuper = true)
 public class Usuario extends PersistenceEntity {
 
     @Column(name = "nome", nullable = false)
