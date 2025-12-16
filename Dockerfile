@@ -1,5 +1,5 @@
 # 1. Define a imagem base (Java 17 é o padrão comum, ajuste se usar 21 ou outro)
-FROM eclipse-temurin:17-jdk-jammy
+FROM eclipse-temurin:21-jdk-jammy
 
 # 2. Define o diretório de trabalho dentro do container
 WORKDIR /app
