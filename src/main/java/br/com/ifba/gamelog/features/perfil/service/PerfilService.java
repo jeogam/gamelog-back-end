@@ -103,4 +103,19 @@ public class PerfilService implements IPerfilService {
                 entity.getUsuario().getId() // UUID
         );
     }
+
+
+    @Override
+    @Transactional
+    public PerfilResponseDTO updateByUsuarioId(UUID usuarioId, br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarMeusDadosRequestDTO dto) {
+        Perfil perfil = perfilRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new BusinessException("Perfil não encontrado para o usuário logado."));
+
+        perfil.setNomeExibicao(dto.nomeExibicao());
+        perfil.setBiografia(dto.biografia());
+        perfil.setAvatarImagem(dto.avatarImagem());
+
+        Perfil updatedEntity = perfilRepository.save(perfil);
+        return mapToResponse(updatedEntity);
+    }
 }

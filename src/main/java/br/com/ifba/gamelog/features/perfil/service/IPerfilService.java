@@ -1,5 +1,6 @@
 package br.com.ifba.gamelog.features.perfil.service;
 
+import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarMeusDadosRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilCriarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.response.PerfilResponseDTO;
@@ -71,4 +72,13 @@ public interface IPerfilService {
      * @throws BusinessException se o perfil não for encontrado.
      */
     void delete(Long id);
+
+    /**
+     * Atualiza os dados do perfil do usuário logado.
+     *
+     * @param usuarioId ID do usuário autenticado.
+     * @param dto Dados para atualização.
+     * @return Perfil atualizado.
+     */
+    PerfilResponseDTO updateByUsuarioId(UUID usuarioId, PerfilAtualizarMeusDadosRequestDTO dto);
 }

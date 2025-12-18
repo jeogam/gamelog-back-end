@@ -1,9 +1,11 @@
 package br.com.ifba.gamelog.features.perfil.controller;
 
+import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarMeusDadosRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilCriarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.response.PerfilResponseDTO;
 import br.com.ifba.gamelog.features.perfil.service.IPerfilService;
+import br.com.ifba.gamelog.features.usuario.model.Usuario;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import br.com.ifba.gamelog.infrastructure.util.ResultError;
@@ -21,6 +23,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -168,5 +171,34 @@ public class PerfilController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         perfilService.delete(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Recupera o perfil do usuário logado (baseado no token).
+     */
+    @Operation(summary = "Meu Perfil", description = "Retorna os dados do perfil do usuário autenticado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil recuperado com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Perfil não encontrado (inconsistência de dados).")
+    })
+    @GetMapping("/meu-perfil")
+    public ResponseEntity<PerfilResponseDTO> meuPerfil(@AuthenticationPrincipal Usuario usuarioLogado) {
+        return ResponseEntity.ok(perfilService.findByUsuarioId(usuarioLogado.getId()));
+    }
+
+    /**
+     * Atualiza o perfil do usuário logado.
+     */
+    @Operation(summary = "Atualizar Meu Perfil", description = "Atualiza biografia, nome de exibição e avatar do usuário autenticado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil atualizado com sucesso."),
+            @ApiResponse(responseCode = "422", description = "Erro de validação.")
+    })
+    @PutMapping("/meu-perfil")
+    public ResponseEntity<PerfilResponseDTO> updateMeuPerfil(
+            @AuthenticationPrincipal Usuario usuarioLogado,
+            @RequestBody @Valid PerfilAtualizarMeusDadosRequestDTO dto) {
+
+        return ResponseEntity.ok(perfilService.updateByUsuarioId(usuarioLogado.getId(), dto));
     }
 }
