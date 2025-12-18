@@ -1,5 +1,6 @@
 package br.com.ifba.gamelog.features.usuario.dto.response;
 
+import br.com.ifba.gamelog.features.usuario.model.UsuarioRole;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -15,5 +16,8 @@ public record UsuarioResponseDTO(
         String nome,
 
         @JsonProperty("email")
-        String email
+        String email,
+
+        @JsonProperty("papel")
+        UsuarioRole papel
 ) {}

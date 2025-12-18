@@ -28,7 +28,10 @@ public class Usuario extends PersistenceEntity {
     @Column(name = "senha", nullable = false)
     private String senha;
 
-    // 'criadoEm' foi removido pois já existe na PersistenceEntity como 'createdAt'
+    // --- NOVO CAMPO ---
+    @Enumerated(EnumType.STRING)
+    @Column(name = "papel", nullable = false)
+    private UsuarioRole papel = UsuarioRole.USUARIO;
 
     // --- Relacionamentos ---
 
