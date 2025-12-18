@@ -1,9 +1,8 @@
 package br.com.ifba.gamelog.features.perfil.model;
 
+import br.com.ifba.gamelog.features.usuario.model.Usuario;
 import br.com.ifba.gamelog.infrastructure.model.SimplePersistenceEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -13,15 +12,19 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Perfil extends SimplePersistenceEntity {
+public class Perfil extends SimplePersistenceEntity { // ID é Long
 
-    @Column(name = "avatar_imagem", nullable = true)
+    @Column(name = "avatar_imagem")
     private String avatarImagem;
 
-    @Column(name = "biografia", nullable = true)
+    @Column(name = "biografia", length = 500)
     private String biografia;
 
-    @Column(name = "nome_exibicao", nullable = true)
+    @Column(name = "nome_exibicao")
     private String nomeExibicao;
 
+    // Relacionamento OneToOne: Um Perfil pertence a um Usuario.
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
+    private Usuario usuario;
 }
