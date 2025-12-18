@@ -12,13 +12,15 @@ import java.util.Date;
 @Service
 public class TokenAuthenticationService {
 
-    // Em produção, isso deve vir do application.properties
+    // Em produção, usar application.properties
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long EXPIRATION_TIME = 864_000_000; // 10 dias
+    private static final long EXPIRATION_TIME = 864_000_000;
 
-    public String generateToken(String username) {
+    // ATUALIZAÇÃO: Receber o "role" como parâmetro
+    public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("role", role)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY)
                 .compact();
@@ -31,9 +33,9 @@ public class TokenAuthenticationService {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject(); // Retorna o email/username
+            return claims.getSubject();
         } catch (Exception e) {
-            return null; // Token inválido
+            return null;
         }
     }
 }

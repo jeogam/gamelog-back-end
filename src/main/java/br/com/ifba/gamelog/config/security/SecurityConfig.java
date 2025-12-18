@@ -19,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Correção: Usar JWTLoginFilter em vez de JWTFilter
     private final JWTLoginFilter jwtLoginFilter;
 
     public SecurityConfig(JWTLoginFilter jwtLoginFilter) {
@@ -33,16 +32,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        // Endpoints Públicos (Swagger)
+                        // Endpoints Públicos
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
-                        // Endpoints Públicos (Autenticação e Criação de Conta)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/usuario").permitAll()
 
-                        // Endpoints Públicos (Leitura - Opcional)
+                        // Leitura pública (opcional, remova se quiser privado)
                         .requestMatchers(HttpMethod.GET, "/api/v1/jogos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/avaliacoes/**").permitAll()
+
+                        // --- EXEMPLO DE PERMISSÃO POR ROLE ---
+                        // Apenas ADMIN pode deletar usuários.
+                        // hasRole adiciona "ROLE_" automaticamente, então verifica "ROLE_ADMINISTRADOR"
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
 
                         // Qualquer outra requisição precisa estar autenticada
                         .anyRequest().authenticated()

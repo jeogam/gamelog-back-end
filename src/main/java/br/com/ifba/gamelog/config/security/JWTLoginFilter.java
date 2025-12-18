@@ -2,28 +2,29 @@ package br.com.ifba.gamelog.config.security;
 
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
 import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
-import br.com.ifba.gamelog.infrastructure.service.TokenAuthenticationService;
+import br.com.ifba.gamelog.infrastructure.service.TokenService; // Usar TokenService!
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 public class JWTLoginFilter extends OncePerRequestFilter {
 
-    private final TokenAuthenticationService tokenAuthenticationService;
+    private final TokenService tokenService; // Corrigido para TokenService
     private final IUsuarioRepository userRepository;
 
-    public JWTLoginFilter(TokenAuthenticationService tokenAuthenticationService, IUsuarioRepository userRepository) {
-        this.tokenAuthenticationService = tokenAuthenticationService;
+    public JWTLoginFilter(TokenService tokenService, IUsuarioRepository userRepository) {
+        this.tokenService = tokenService;
         this.userRepository = userRepository;
     }
 
@@ -31,24 +32,24 @@ public class JWTLoginFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Verifica token
         Optional<String> tokenOpt = extractToken(request);
 
         if (tokenOpt.isPresent()) {
-            String email = tokenAuthenticationService.validateToken(tokenOpt.get());
+            String email = tokenService.validateToken(tokenOpt.get());
 
             if (email != null) {
                 // Busca usuário no banco (simulando UserDetails)
-                // OBS: Seu UsuarioRepository pode precisar do método findByEmail
-                Usuario user = userRepository.findAll().stream()
-                        .filter(u -> u.getEmail().equals(email))
-                        .findFirst()
-                        .orElse(null);
+                Usuario user = userRepository.findByEmail(email).orElse(null);
 
                 if (user != null) {
-                    // Autentica no Spring
+                    // ATUALIZAÇÃO: Cria a Authority baseada no Enum
+                    // O Spring Security usa o padrão "ROLE_NOME"
+                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getPapel().name()));
+
+                    // Autentica passando as authorities
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+                            new UsernamePasswordAuthenticationToken(user, null, authorities);
+
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
