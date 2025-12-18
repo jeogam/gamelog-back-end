@@ -127,4 +127,24 @@ public class UsuarioService implements IUsuarioService {
         repository.deleteById(id);
         return id;
     }
+
+    // Adicione este método na classe UsuarioService
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO updatePapel(UUID id, br.com.ifba.gamelog.features.usuario.dto.request.UsuarioPapelRequestDTO dto) {
+        Usuario usuario = repository.findById(id)
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
+
+        usuario.setPapel(dto.papel());
+
+        Usuario usuarioAtualizado = repository.save(usuario);
+
+        return new UsuarioResponseDTO(
+                usuarioAtualizado.getId(),
+                usuarioAtualizado.getNome(),
+                usuarioAtualizado.getEmail(),
+                usuarioAtualizado.getPapel()
+        );
+    }
 }

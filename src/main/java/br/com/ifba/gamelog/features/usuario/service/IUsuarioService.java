@@ -73,4 +73,16 @@ public interface IUsuarioService {
      * @throws BusinessException se o usuário não for encontrado.
      */
     UUID delete(UUID id);
+
+    /**
+     * Atualiza o papel de um usuário existente.
+     * <p>
+     * Ele atualiza o Papel (Role) de um usuário.
+     * </p>
+     *
+     * @param dto Dados atualizados do usuário.
+     * @return DTO com os dados do usuário após a atualização.
+     * @throws BusinessException se o usuário não existir.
+     */
+    UsuarioResponseDTO updatePapel(java.util.UUID id, br.com.ifba.gamelog.features.usuario.dto.request.UsuarioPapelRequestDTO dto);
 }

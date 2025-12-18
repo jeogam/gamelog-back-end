@@ -6,6 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // IMPORTANTE
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true) // <--- ADICIONAR ISSO
 public class SecurityConfig {
 
     private final JWTLoginFilter jwtLoginFilter;
@@ -36,17 +38,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/usuario").permitAll()
-
-                        // Leitura pública (opcional, remova se quiser privado)
                         .requestMatchers(HttpMethod.GET, "/api/v1/jogos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/avaliacoes/**").permitAll()
 
-                        // --- EXEMPLO DE PERMISSÃO POR ROLE ---
-                        // Apenas ADMIN pode deletar usuários.
-                        // hasRole adiciona "ROLE_" automaticamente, então verifica "ROLE_ADMINISTRADOR"
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
-
-                        // Qualquer outra requisição precisa estar autenticada
+                        // O resto valida pelo @PreAuthorize nos Controllers ou aqui
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
