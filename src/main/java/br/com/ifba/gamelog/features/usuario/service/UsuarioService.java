@@ -4,7 +4,7 @@ import br.com.ifba.gamelog.features.usuario.dto.request.UsuarioAtualizarRequestD
 import br.com.ifba.gamelog.features.usuario.dto.request.UsuarioCriarRequestDTO;
 import br.com.ifba.gamelog.features.usuario.dto.response.UsuarioResponseDTO;
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
-import br.com.ifba.gamelog.features.usuario.model.UsuarioRole; // Import necessário
+import br.com.ifba.gamelog.features.usuario.model.UsuarioRole; // Verifique se o nome do seu Enum é UsuarioRole ou Papel
 import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
@@ -38,7 +38,8 @@ public class UsuarioService implements IUsuarioService {
         Usuario entity = objectMapperUtil.map(dto, Usuario.class);
         entity.setSenha(passwordEncoder.encode(dto.senha()));
 
-        // Regra de Negócio: Se não informou papel, define padrão como USUARIO
+        // --- CORREÇÃO IMPORTANTE ---
+        // Se não veio papel do front, define USUARIO como padrão
         if (entity.getPapel() == null) {
             entity.setPapel(UsuarioRole.USUARIO);
         }
@@ -49,7 +50,7 @@ public class UsuarioService implements IUsuarioService {
                 savedEntity.getId(),
                 savedEntity.getNome(),
                 savedEntity.getEmail(),
-                savedEntity.getPapel() // Novo campo
+                savedEntity.getPapel()
         );
     }
 
@@ -61,7 +62,7 @@ public class UsuarioService implements IUsuarioService {
                         entity.getId(),
                         entity.getNome(),
                         entity.getEmail(),
-                        entity.getPapel() // Novo campo
+                        entity.getPapel()
                 ))
                 .collect(Collectors.toList());
     }
@@ -74,7 +75,7 @@ public class UsuarioService implements IUsuarioService {
                         entity.getId(),
                         entity.getNome(),
                         entity.getEmail(),
-                        entity.getPapel() // Novo campo
+                        entity.getPapel()
                 ));
     }
 
@@ -86,7 +87,7 @@ public class UsuarioService implements IUsuarioService {
                         entity.getId(),
                         entity.getNome(),
                         entity.getEmail(),
-                        entity.getPapel() // Novo campo
+                        entity.getPapel()
                 ))
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
     }
@@ -114,7 +115,7 @@ public class UsuarioService implements IUsuarioService {
                 updatedEntity.getId(),
                 updatedEntity.getNome(),
                 updatedEntity.getEmail(),
-                updatedEntity.getPapel() // Novo campo
+                updatedEntity.getPapel()
         );
     }
 
@@ -127,8 +128,6 @@ public class UsuarioService implements IUsuarioService {
         repository.deleteById(id);
         return id;
     }
-
-    // Adicione este método na classe UsuarioService
 
     @Override
     @Transactional

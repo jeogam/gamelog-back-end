@@ -2,7 +2,7 @@ package br.com.ifba.gamelog.config.security;
 
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
 import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
-import br.com.ifba.gamelog.infrastructure.service.TokenService; // Usar TokenService!
+import br.com.ifba.gamelog.infrastructure.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Component
 public class JWTLoginFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService; // Corrigido para TokenService
+    private final TokenService tokenService;
     private final IUsuarioRepository userRepository;
 
     public JWTLoginFilter(TokenService tokenService, IUsuarioRepository userRepository) {
@@ -38,15 +38,15 @@ public class JWTLoginFilter extends OncePerRequestFilter {
             String email = tokenService.validateToken(tokenOpt.get());
 
             if (email != null) {
-                // Busca usuário no banco (simulando UserDetails)
                 Usuario user = userRepository.findByEmail(email).orElse(null);
 
                 if (user != null) {
-                    // ATUALIZAÇÃO: Cria a Authority baseada no Enum
-                    // O Spring Security usa o padrão "ROLE_NOME"
-                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getPapel().name()));
+                    // --- CORREÇÃO DO ERRO 500 AQUI ---
+                    // Se o papel estiver nulo no banco, assumimos "USUARIO" para não quebrar o sistema
+                    String roleName = (user.getPapel() != null) ? user.getPapel().name() : "USUARIO";
 
-                    // Autentica passando as authorities
+                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleName));
+
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(user, null, authorities);
 

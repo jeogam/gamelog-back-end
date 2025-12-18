@@ -1,4 +1,4 @@
-package br.com.ifba.gamelog.config.cors; // Ajuste o pacote se necessário
+package br.com.ifba.gamelog.config.cors;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +17,9 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:5173", // Vite Local
-                        "http://localhost:3000", // Next.js Local
-                        "https://gamelog-kappa.vercel.app" // SEU FRONT NA VERCEL
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "https://gamelog-kappa.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "TRACE", "CONNECT")
                 .allowedHeaders("*")
