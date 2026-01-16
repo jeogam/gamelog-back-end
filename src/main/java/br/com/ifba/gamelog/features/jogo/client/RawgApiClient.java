@@ -1,17 +1,24 @@
 package br.com.ifba.gamelog.features.jogo.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
+@Slf4j
 @Component
 public class RawgApiClient {
 
     private final WebClient webClient;
     private final String apiKey;
+
+    // Define um timeout padrão para evitar travamentos
+    private static final long API_TIMEOUT_SECONDS = 5;
 
     public RawgApiClient(
             WebClient.Builder webClientBuilder,
@@ -24,23 +31,30 @@ public class RawgApiClient {
 
     /**
      * Busca jogos na API RAWG.
+     * Retorna os campos essenciais: ID Externo, Título, Capa e Ano (via released).
+     *
      * @param query Termo de busca.
-     * @return Lista de jogos externos.
+     * @return Lista de jogos externos ou lista vazia em caso de erro/timeout.
      */
     public Mono<List<RawgGameDetailResponse>> searchGames(String query) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/games")
-                        .queryParam("key", apiKey) // Adiciona a chave de API
+                        .queryParam("key", apiKey)
                         .queryParam("search", query)
+                        .queryParam("page_size", 10) // Otimização: Limita o retorno para não sobrecarregar
                         .build())
                 .retrieve()
-                .bodyToMono(RawgGameListResponse.class) // Converte a resposta para o DTO de lista
-                .map(RawgGameListResponse::results) // Pega apenas a lista de resultados
+                .bodyToMono(RawgGameListResponse.class)
+                .map(RawgGameListResponse::results)
+                .timeout(Duration.ofSeconds(API_TIMEOUT_SECONDS)) // Trata Timeout
+                .doOnError(e -> log.error("Erro na busca de jogos RAWG [query={}]: {}", query, e.getMessage()))
                 .onErrorResume(e -> {
-                    // Log de erro (opcional)
-                    System.err.println("Erro ao buscar jogos na RAWG: " + e.getMessage());
-                    return Mono.just(List.of()); // Retorna lista vazia em caso de falha
+                    if (e instanceof TimeoutException) {
+                        log.warn("Timeout ao buscar jogos na RAWG para o termo: {}", query);
+                    }
+                    // Retorna lista vazia para não quebrar o front-end
+                    return Mono.just(List.of());
                 });
     }
 
@@ -54,6 +68,10 @@ public class RawgApiClient {
                         .queryParam("key", apiKey)
                         .build(idExterno))
                 .retrieve()
-                .bodyToMono(RawgGameDetailResponse.class);
+                .bodyToMono(RawgGameDetailResponse.class)
+                .timeout(Duration.ofSeconds(API_TIMEOUT_SECONDS))
+                .doOnError(e -> log.error("Erro ao buscar detalhe do jogo [id={}]: {}", idExterno, e.getMessage()));
+        // Aqui optamos por não tratar o onErrorResume retornando vazio,
+        // pois o Service (JogoService) espera o objeto ou lança erro de negócio.
     }
 }
