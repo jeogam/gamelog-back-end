@@ -1,4 +1,4 @@
-package br.com.ifba.gamelog.infrastructure.controller; // Sugestão de pacote
+package br.com.ifba.gamelog.infrastructure.controller;
 
 import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +17,10 @@ public class HealthCheckController {
     @GetMapping
     public ResponseEntity<String> checkHealth() {
         try {
-            // Consulta leve para manter o banco acordado
             long count = usuarioRepository.count();
             return ResponseEntity.ok("SISTEMA ONLINE - DB Conectado. Usuários: " + count);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("ERRO CRÍTICO: Banco de dados indisponível.");
+            return ResponseEntity.internalServerError().body("ERRO DE BANCO");
         }
     }
 }
