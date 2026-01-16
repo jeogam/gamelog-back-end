@@ -1,5 +1,6 @@
 package br.com.ifba.gamelog.config.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,33 +20,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JWTLoginFilter jwtLoginFilter;
 
-    public SecurityConfig(JWTLoginFilter jwtLoginFilter) {
-        this.jwtLoginFilter = jwtLoginFilter;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(Customizer.withDefaults()) // Usa o bean do CorsConfig
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(Customizer.withDefaults()) // Ativa o CORS (essencial para Front-end)
+                .csrf(AbstractHttpConfigurer::disable) // Desativa CSRF (padrão para APIs REST)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sem sessão (Stateless)
                 .authorizeHttpRequests(authorize -> authorize
-                        // Libera o preflight do CORS
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // 1. Libera Swagger e Documentação (Essencial para testes)
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // Endpoints Públicos
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // 2. Libera Login (AuthController)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+
+                        // 3. Libera Cadastro de Usuário (UsuarioController)
+                        // AQUI ESTAVA O POSSÍVEL ERRO: Tem que bater com o @RequestMapping do Controller
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/usuario").permitAll()
+
+                        // 4. Libera Leitura Pública (Jogos, Avaliações, Health Check)
                         .requestMatchers(HttpMethod.GET, "/api/v1/jogos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/avaliacoes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll() // Se adicionou o Health Check
 
+                        // 5. Libera endpoint de erro do Spring (Evita 403 em stacktraces)
+                        .requestMatchers("/error").permitAll()
+
+                        // 6. Preflight Requests (CORS)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Qualquer outra rota exige autenticação
                         .anyRequest().authenticated()
                 )
+                // Adiciona o filtro JWT antes do filtro padrão de usuário/senha
                 .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
