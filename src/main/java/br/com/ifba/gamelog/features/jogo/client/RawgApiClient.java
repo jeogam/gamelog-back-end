@@ -42,7 +42,7 @@ public class RawgApiClient {
                         .path("/games")
                         .queryParam("key", apiKey)
                         .queryParam("search", query)
-                        .queryParam("page_size", 10) // Otimização: Limita o retorno para não sobrecarregar
+                        .queryParam("page_size", 10) // Otimização
                         .build())
                 .retrieve()
                 .bodyToMono(RawgGameListResponse.class)
@@ -71,7 +71,5 @@ public class RawgApiClient {
                 .bodyToMono(RawgGameDetailResponse.class)
                 .timeout(Duration.ofSeconds(API_TIMEOUT_SECONDS))
                 .doOnError(e -> log.error("Erro ao buscar detalhe do jogo [id={}]: {}", idExterno, e.getMessage()));
-        // Aqui optamos por não tratar o onErrorResume retornando vazio,
-        // pois o Service (JogoService) espera o objeto ou lança erro de negócio.
     }
 }
