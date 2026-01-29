@@ -23,5 +23,8 @@ public record BibliotecaResponseDTO(
         UUID jogoId,
 
         @JsonProperty("tituloJogo")
-        String tituloJogo // Útil para o front exibir listas sem buscar o jogo dnv
+        String tituloJogo,
+
+        @JsonProperty("capaUrl")
+        String capaUrl
 ) {}

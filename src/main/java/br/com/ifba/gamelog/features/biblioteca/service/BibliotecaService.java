@@ -164,7 +164,8 @@ public class BibliotecaService implements IBibliotecaService {
                 entity.isFavorito(),
                 entity.getUsuario().getId(),
                 entity.getJogo().getId(),
-                entity.getJogo().getTitulo()
+                entity.getJogo().getTitulo(),
+                entity.getJogo().getCapaUrl()
         );
     }
 }
