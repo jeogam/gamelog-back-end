@@ -17,9 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // NOVO IMPORT
-import org.springframework.data.domain.Pageable; // NOVO IMPORT
-import org.springframework.data.web.PageableDefault; // NOVO IMPORT
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +72,7 @@ public class ListaPersonalizadaController {
      *
      * @return Lista de todas as listas.
      */
-    @Operation(summary = "Listar Todas", description = "Recupera todas as listas do sistema. Use /paginado para grandes volumes.")
+    @Operation(summary = "Listar Todas (Não Paginado)", description = "Recupera todas as listas do sistema. Use /paginado para grandes volumes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Listas recuperadas com sucesso.",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ListaPersonalizadaResponseDTO.class))))
@@ -99,7 +99,6 @@ public class ListaPersonalizadaController {
         return ResponseEntity.ok(listaService.findAllPaged(pageable));
     }
 
-
     /**
      * Recupera os detalhes de uma lista específica.
      *
@@ -124,7 +123,8 @@ public class ListaPersonalizadaController {
      */
     @Operation(summary = "Listas do Usuário", description = "Recupera as listas criadas por um usuário específico.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Listas recuperadas com sucesso.")
+            @ApiResponse(responseCode = "200", description = "Listas recuperadas com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado.")
     })
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<ListaPersonalizadaResponseDTO>> findByUsuario(@PathVariable UUID usuarioId) {

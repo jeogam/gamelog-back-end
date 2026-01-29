@@ -10,9 +10,16 @@ import java.util.UUID;
 @Repository
 public interface IBibliotecaRepository extends JpaRepository<Biblioteca, UUID> {
 
-    // Verifica se o usuário já tem esse jogo na biblioteca
+    /**
+     * Verifica se o usuário já possui este jogo específico na biblioteca.
+     */
     boolean existsByUsuarioIdAndJogoId(UUID usuarioId, UUID jogoId);
 
-    // Busca todos os itens de um usuário específico
+    /**
+     * Busca todos os itens de biblioteca pertencentes a um usuário.
+     *
+     * @param usuarioId UUID do usuário.
+     * @return Lista de itens da biblioteca.
+     */
     List<Biblioteca> findAllByUsuarioId(UUID usuarioId);
 }

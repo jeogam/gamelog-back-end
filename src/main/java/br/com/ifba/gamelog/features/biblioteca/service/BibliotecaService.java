@@ -3,6 +3,7 @@ package br.com.ifba.gamelog.features.biblioteca.service;
 import br.com.ifba.gamelog.features.biblioteca.dto.request.BibliotecaAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.biblioteca.dto.request.BibliotecaCriarRequestDTO;
 import br.com.ifba.gamelog.features.biblioteca.dto.response.BibliotecaResponseDTO;
+import br.com.ifba.gamelog.features.biblioteca.mapper.BibliotecaMapper;
 import br.com.ifba.gamelog.features.biblioteca.model.Biblioteca;
 import br.com.ifba.gamelog.features.biblioteca.repository.IBibliotecaRepository;
 import br.com.ifba.gamelog.features.jogo.model.Jogo;
@@ -12,8 +13,8 @@ import br.com.ifba.gamelog.features.usuario.repository.IUsuarioRepository;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // NOVO IMPORT
-import org.springframework.data.domain.Pageable; // NOVO IMPORT
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Serviço responsável por gerenciar a biblioteca de jogos dos usuários.
- * Implementa as regras de negócio para salvar, atualizar e listar jogos.
+ * Serviço responsável pelas regras de negócio da biblioteca de jogos.
+ * Gerencia a adição, atualização, remoção e listagem de jogos salvos pelos usuários.
  *
  * @author Seu Nome
+ * @since 1.0
  */
 @Service
 @RequiredArgsConstructor
@@ -33,30 +35,34 @@ public class BibliotecaService implements IBibliotecaService {
     private final IBibliotecaRepository repository;
     private final IUsuarioRepository usuarioRepository;
     private final IJogoRepository jogoRepository;
+    private final BibliotecaMapper mapper;
 
     /**
-     * Adiciona um jogo à biblioteca.
-     * Valida se usuário e jogo existem e impede duplicidade.
+     * Adiciona um jogo à biblioteca do usuário.
      *
-     * @param dto Dados para criação.
-     * @return Item criado.
+     * @param dto Dados para inclusão na biblioteca.
+     * @return O item criado.
+     * @throws BusinessException Se usuário/jogo não existirem ou se já houver duplicidade.
      */
     @Override
     @Transactional
     public BibliotecaResponseDTO save(BibliotecaCriarRequestDTO dto) {
-        // 1. Validações de existência
+        // 1. Validar Usuário
         Usuario usuario = usuarioRepository.findById(dto.usuarioId())
-                .orElseThrow(() -> new BusinessException("Usuário não encontrado."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.USER_NOT_FOUND.getMessage()));
 
+        // 2. Validar Jogo
         Jogo jogo = jogoRepository.findById(dto.jogoId())
-                .orElseThrow(() -> new BusinessException("Jogo não encontrado."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
-        // 2. Regra: Não pode ter o mesmo jogo 2x na biblioteca
+        // 3. Validar Duplicidade
         if (repository.existsByUsuarioIdAndJogoId(dto.usuarioId(), dto.jogoId())) {
-            throw new BusinessException("Este jogo já está na biblioteca deste usuário.");
+            throw new BusinessException(
+                    BusinessExceptionMessage.ATTRIBUTE_VALUE_ALREADY_EXISTS.getAttributeValueAlreadyExistsMessage("Jogo na Biblioteca")
+            );
         }
 
-        // 3. Montagem
+        // 4. Salvar
         Biblioteca entity = new Biblioteca();
         entity.setUsuario(usuario);
         entity.setJogo(jogo);
@@ -64,68 +70,59 @@ public class BibliotecaService implements IBibliotecaService {
         entity.setFavorito(dto.favorito());
 
         Biblioteca savedEntity = repository.save(entity);
-        return mapToResponse(savedEntity);
+        return mapper.toResponse(savedEntity);
     }
 
     /**
-     * Lista todos os itens de todas as bibliotecas.
-     *
-     * @return Lista geral.
+     * Lista todos os itens de biblioteca cadastrados no sistema.
      */
     @Override
     @Transactional(readOnly = true)
     public List<BibliotecaResponseDTO> findAll() {
         return repository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .toList();
     }
 
     /**
-     * Lista todos os itens de biblioteca do sistema com suporte a paginação.
-     *
-     * @param pageable Configurações de paginação (página, tamanho, ordenação).
-     * @return Uma página de DTOs de itens de biblioteca.
+     * Lista itens de biblioteca com paginação.
      */
     @Override
     @Transactional(readOnly = true)
     public Page<BibliotecaResponseDTO> findAllPaged(Pageable pageable) {
         return repository.findAll(pageable)
-                .map(this::mapToResponse);
+                .map(mapper::toResponse);
     }
 
     /**
-     * Lista a biblioteca de um usuário específico.
-     *
-     * @param usuarioId ID do usuário.
-     * @return Lista de jogos do usuário.
+     * Lista todos os jogos na biblioteca de um usuário específico.
      */
     @Override
     @Transactional(readOnly = true)
     public List<BibliotecaResponseDTO> findAllByUsuario(UUID usuarioId) {
+        // Valida se o usuário existe antes de buscar (opcional, mas boa prática)
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new BusinessException(BusinessExceptionMessage.USER_NOT_FOUND.getMessage());
+        }
+
         return repository.findAllByUsuarioId(usuarioId).stream()
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .toList();
     }
 
     /**
-     * Busca um item pelo ID.
-     *
-     * @param id ID do item.
-     * @return DTO do item.
+     * Busca um item específico da biblioteca por ID.
      */
     @Override
     @Transactional(readOnly = true)
     public BibliotecaResponseDTO findById(UUID id) {
         return repository.findById(id)
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
     }
 
     /**
-     * Atualiza status ou favorito de um item.
-     *
-     * @param dto Dados atualizados.
-     * @return Item atualizado.
+     * Atualiza o status ou favorito de um item da biblioteca.
      */
     @Override
     @Transactional
@@ -137,14 +134,11 @@ public class BibliotecaService implements IBibliotecaService {
         entity.setFavorito(dto.favorito());
 
         Biblioteca updatedEntity = repository.save(entity);
-        return mapToResponse(updatedEntity);
+        return mapper.toResponse(updatedEntity);
     }
 
     /**
      * Remove um item da biblioteca.
-     *
-     * @param id ID do item.
-     * @return ID removido.
      */
     @Override
     @Transactional
@@ -154,18 +148,5 @@ public class BibliotecaService implements IBibliotecaService {
         }
         repository.deleteById(id);
         return id;
-    }
-
-    // Método auxiliar privado não precisa de Javadoc obrigatório, mas ajuda a entender
-    private BibliotecaResponseDTO mapToResponse(Biblioteca entity) {
-        return new BibliotecaResponseDTO(
-                entity.getId(),
-                entity.getStatus(),
-                entity.isFavorito(),
-                entity.getUsuario().getId(),
-                entity.getJogo().getId(),
-                entity.getJogo().getTitulo(),
-                entity.getJogo().getCapaUrl()
-        );
     }
 }

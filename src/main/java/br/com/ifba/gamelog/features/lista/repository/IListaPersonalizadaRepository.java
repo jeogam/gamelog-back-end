@@ -10,6 +10,11 @@ import java.util.UUID;
 @Repository
 public interface IListaPersonalizadaRepository extends JpaRepository<ListaPersonalizada, UUID> {
 
-    // Buscar listas de um usuário específico
+    /**
+     * Busca todas as listas personalizadas criadas por um usuário específico.
+     *
+     * @param usuarioId UUID do usuário.
+     * @return Lista de listas personalizadas.
+     */
     List<ListaPersonalizada> findAllByUsuarioId(UUID usuarioId);
 }

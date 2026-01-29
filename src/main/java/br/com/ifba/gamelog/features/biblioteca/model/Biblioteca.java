@@ -19,7 +19,7 @@ public class Biblioteca extends PersistenceEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private StatusJogo status; // Enum: QUERO_JOGAR, JOGANDO, ZERADO, ABANDONADO
+    private StatusJogo status;
 
     @Column(name = "favorito", nullable = false)
     private boolean favorito = false;

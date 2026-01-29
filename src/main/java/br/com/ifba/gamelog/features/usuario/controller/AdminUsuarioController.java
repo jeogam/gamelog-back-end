@@ -15,6 +15,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Controlador REST administrativo para gestão avançada de usuários.
+ * <p>
+ * Contém operações sensíveis, como alteração de papéis (Role).
+ * </p>
+ *
+ * @author Seu Nome
+ * @since 1.0
+ */
 @RestController
 @RequestMapping("/api/v1/admin/usuarios")
 @Tag(name = "Admin - Gestão de Usuários", description = "Endpoints administrativos para gestão de usuários")
@@ -23,6 +32,14 @@ public class AdminUsuarioController {
 
     private final IUsuarioService usuarioService;
 
+    /**
+     * Altera o papel (Role) de um usuário (ex: USUARIO -> ADMINISTRADOR).
+     * Requer permissão de administrador.
+     *
+     * @param id  UUID do usuário.
+     * @param dto Novo papel.
+     * @return Usuário com papel atualizado.
+     */
     @Operation(summary = "Alterar Papel do Usuário", description = "Endpoint exclusivo para Administradores alterarem o papel de um usuário.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Papel atualizado com sucesso."),
@@ -30,7 +47,7 @@ public class AdminUsuarioController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado.")
     })
     @PutMapping("/{id}/papel")
-    @PreAuthorize("hasRole('ADMINISTRADOR')") // Segurança solicitada na tarefa
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<UsuarioResponseDTO> updatePapel(
             @PathVariable UUID id,
             @RequestBody @Valid UsuarioPapelRequestDTO dto) {

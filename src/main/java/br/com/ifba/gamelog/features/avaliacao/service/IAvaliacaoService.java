@@ -23,4 +23,5 @@ public interface IAvaliacaoService {
     AvaliacaoResponseDTO findById(UUID id);
     AvaliacaoResponseDTO update(AvaliacaoAtualizarRequestDTO dto);
     UUID delete(UUID id);
+    public List<AvaliacaoResponseDTO> findAllByJogo(UUID jogoId);
 }

@@ -1,8 +1,10 @@
 package br.com.ifba.gamelog.features.perfil.service;
 
+import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarMeusDadosRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.request.PerfilCriarRequestDTO;
 import br.com.ifba.gamelog.features.perfil.dto.response.PerfilResponseDTO;
+import br.com.ifba.gamelog.features.perfil.mapper.PerfilMapper;
 import br.com.ifba.gamelog.features.perfil.model.Perfil;
 import br.com.ifba.gamelog.features.perfil.repository.IPerfilRepository;
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
@@ -17,23 +19,37 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Serviço responsável pelas regras de negócio de Perfis.
+ * Gerencia criação, atualização e busca de perfis de usuário.
+ *
+ * @author Seu Nome
+ * @since 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class PerfilService implements IPerfilService {
 
     private final IPerfilRepository perfilRepository;
     private final IUsuarioRepository usuarioRepository;
+    private final PerfilMapper mapper;
 
+    /**
+     * Cria um novo perfil para um usuário.
+     * Valida se o usuário existe e se já possui perfil.
+     */
     @Override
     @Transactional
     public PerfilResponseDTO save(PerfilCriarRequestDTO dto) {
-        // 1. Verificar se usuário existe (UUID)
+        // 1. Verificar se usuário existe
         Usuario usuario = usuarioRepository.findById(dto.usuarioId())
-                .orElseThrow(() -> new BusinessException("Usuário não encontrado."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.USER_NOT_FOUND.getMessage()));
 
         // 2. Verificar se usuário já tem perfil (Regra 1:1)
         if (perfilRepository.existsByUsuarioId(dto.usuarioId())) {
-            throw new BusinessException("Este usuário já possui um perfil cadastrado.");
+            throw new BusinessException(
+                    BusinessExceptionMessage.ATTRIBUTE_VALUE_ALREADY_EXISTS.getAttributeValueAlreadyExistsMessage("Perfil para este Usuário")
+            );
         }
 
         // 3. Criar Perfil
@@ -44,36 +60,47 @@ public class PerfilService implements IPerfilService {
         perfil.setAvatarImagem(dto.avatarImagem());
 
         Perfil salvo = perfilRepository.save(perfil);
-        return mapToResponse(salvo);
+        return mapper.toResponse(salvo);
     }
 
+    /**
+     * Busca perfil por ID.
+     */
     @Override
     @Transactional(readOnly = true)
-    public PerfilResponseDTO findById(Long id) { // Recebe Long
+    public PerfilResponseDTO findById(Long id) {
         return perfilRepository.findById(id)
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
     }
 
+    /**
+     * Busca perfil pelo ID do usuário associado.
+     */
     @Override
     @Transactional(readOnly = true)
-    public PerfilResponseDTO findByUsuarioId(UUID usuarioId) { // Recebe UUID
+    public PerfilResponseDTO findByUsuarioId(UUID usuarioId) {
         return perfilRepository.findByUsuarioId(usuarioId)
-                .map(this::mapToResponse)
-                .orElseThrow(() -> new BusinessException("Perfil não encontrado para o usuário informado."));
+                .map(mapper::toResponse)
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
     }
 
+    /**
+     * Lista perfis com paginação.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<PerfilResponseDTO> findAllPaged(Pageable pageable) {
         return perfilRepository.findAll(pageable)
-                .map(this::mapToResponse);
+                .map(mapper::toResponse);
     }
 
+    /**
+     * Atualiza dados de um perfil (Admin/Geral).
+     */
     @Override
     @Transactional
     public PerfilResponseDTO update(PerfilAtualizarRequestDTO dto) {
-        // Busca por ID (Long)
         Perfil perfil = perfilRepository.findById(dto.id())
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
@@ -82,9 +109,12 @@ public class PerfilService implements IPerfilService {
         perfil.setAvatarImagem(dto.avatarImagem());
 
         Perfil atualizado = perfilRepository.save(perfil);
-        return mapToResponse(atualizado);
+        return mapper.toResponse(atualizado);
     }
 
+    /**
+     * Remove um perfil.
+     */
     @Override
     @Transactional
     public void delete(Long id) {
@@ -94,28 +124,20 @@ public class PerfilService implements IPerfilService {
         perfilRepository.deleteById(id);
     }
 
-    private PerfilResponseDTO mapToResponse(Perfil entity) {
-        return new PerfilResponseDTO(
-                entity.getId(), // Long
-                entity.getNomeExibicao(),
-                entity.getBiografia(),
-                entity.getAvatarImagem(),
-                entity.getUsuario().getId() // UUID
-        );
-    }
-
-
+    /**
+     * Atualiza os dados do perfil do usuário logado.
+     */
     @Override
     @Transactional
-    public PerfilResponseDTO updateByUsuarioId(UUID usuarioId, br.com.ifba.gamelog.features.perfil.dto.request.PerfilAtualizarMeusDadosRequestDTO dto) {
+    public PerfilResponseDTO updateByUsuarioId(UUID usuarioId, PerfilAtualizarMeusDadosRequestDTO dto) {
         Perfil perfil = perfilRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new BusinessException("Perfil não encontrado para o usuário logado."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
         perfil.setNomeExibicao(dto.nomeExibicao());
         perfil.setBiografia(dto.biografia());
         perfil.setAvatarImagem(dto.avatarImagem());
 
         Perfil updatedEntity = perfilRepository.save(perfil);
-        return mapToResponse(updatedEntity);
+        return mapper.toResponse(updatedEntity);
     }
 }

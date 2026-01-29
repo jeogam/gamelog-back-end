@@ -3,6 +3,8 @@ package br.com.ifba.gamelog.infrastructure.exception;
 /**
  * Enum que define as mensagens de erro de negócio do GameLog.
  * Utilizado para padronizar o retorno de exceções via GlobalExceptionHandler.
+ *
+ * @author GameLog Team
  */
 public enum BusinessExceptionMessage {
 

@@ -3,6 +3,7 @@ package br.com.ifba.gamelog.features.avaliacao.service;
 import br.com.ifba.gamelog.features.avaliacao.dto.request.AvaliacaoAtualizarRequestDTO;
 import br.com.ifba.gamelog.features.avaliacao.dto.request.AvaliacaoCriarRequestDTO;
 import br.com.ifba.gamelog.features.avaliacao.dto.response.AvaliacaoResponseDTO;
+import br.com.ifba.gamelog.features.avaliacao.mapper.AvaliacaoMapper;
 import br.com.ifba.gamelog.features.avaliacao.model.Avaliacao;
 import br.com.ifba.gamelog.features.avaliacao.repository.IAvaliacaoRepository;
 import br.com.ifba.gamelog.features.jogo.model.Jogo;
@@ -22,23 +23,22 @@ import java.util.UUID;
 
 /**
  * Serviço responsável pelas regras de negócio das avaliações.
- * Gerencia a criação, atualização e listagem de reviews de jogos.
+ * Gerencia a criação, atualização, exclusão e listagem de reviews de jogos.
  *
  * @author Seu Nome
+ * @since 1.0
  */
 @Service
 @RequiredArgsConstructor
 public class AvaliacaoService implements IAvaliacaoService {
 
     private final IAvaliacaoRepository repository;
-    private final IUsuarioRepository usuarioRepository; // Necessário para buscar o autor
-    private final IJogoRepository jogoRepository;       // Necessário para buscar o jogo
+    private final IUsuarioRepository usuarioRepository;
+    private final IJogoRepository jogoRepository;
+    private final AvaliacaoMapper mapper;
 
     /**
      * Cria uma nova avaliação no sistema.
-     * <p>
-     * Valida se o usuário e o jogo existem e se o usuário já não avaliou este jogo anteriormente.
-     * </p>
      *
      * @param dto Dados da nova avaliação.
      * @return DTO da avaliação criada.
@@ -47,20 +47,16 @@ public class AvaliacaoService implements IAvaliacaoService {
     @Override
     @Transactional
     public AvaliacaoResponseDTO save(AvaliacaoCriarRequestDTO dto) {
-        // 1. Validar existência do Usuário
         Usuario usuario = usuarioRepository.findById(dto.usuarioId())
-                .orElseThrow(() -> new BusinessException("Usuário não encontrado com o ID fornecido."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.USER_NOT_FOUND.getMessage()));
 
-        // 2. Validar existência do Jogo
         Jogo jogo = jogoRepository.findById(dto.jogoId())
-                .orElseThrow(() -> new BusinessException("Jogo não encontrado com o ID fornecido."));
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
-        // 3. Regra de Negócio: Evitar duplicidade
         if (repository.existsByUsuarioIdAndJogoId(dto.usuarioId(), dto.jogoId())) {
             throw new BusinessException("Este usuário já avaliou este jogo. Use a edição para alterar a nota.");
         }
 
-        // 4. Montagem da Entidade
         Avaliacao entity = new Avaliacao();
         entity.setNota(dto.nota());
         entity.setComentario(dto.comentario());
@@ -68,11 +64,11 @@ public class AvaliacaoService implements IAvaliacaoService {
         entity.setJogo(jogo);
 
         Avaliacao savedEntity = repository.save(entity);
-        return mapToResponse(savedEntity);
+        return mapper.toResponse(savedEntity);
     }
 
     /**
-     * Lista todas as avaliações cadastradas.
+     * Lista todas as avaliações cadastradas no sistema.
      *
      * @return Lista de DTOs.
      */
@@ -80,21 +76,35 @@ public class AvaliacaoService implements IAvaliacaoService {
     @Transactional(readOnly = true)
     public List<AvaliacaoResponseDTO> findAll() {
         return repository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .toList();
     }
 
     /**
      * Lista as avaliações do sistema com suporte a paginação.
      *
-     * @param pageable Configurações de paginação (página, tamanho, ordenação).
+     * @param pageable Configurações de paginação.
      * @return Uma página de DTOs de avaliações.
      */
     @Override
     @Transactional(readOnly = true)
     public Page<AvaliacaoResponseDTO> findAllPaged(Pageable pageable) {
         return repository.findAll(pageable)
-                .map(this::mapToResponse);
+                .map(mapper::toResponse);
+    }
+
+    /**
+     * Lista todas as avaliações de um jogo específico.
+     *
+     * @param jogoId ID do jogo.
+     * @return Lista de avaliações do jogo.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<AvaliacaoResponseDTO> findAllByJogo(UUID jogoId) {
+        return repository.findByJogoId(jogoId).stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     /**
@@ -102,12 +112,13 @@ public class AvaliacaoService implements IAvaliacaoService {
      *
      * @param id Identificador da avaliação.
      * @return Dados da avaliação.
+     * @throws BusinessException caso não encontrada.
      */
     @Override
     @Transactional(readOnly = true)
     public AvaliacaoResponseDTO findById(UUID id) {
         return repository.findById(id)
-                .map(this::mapToResponse)
+                .map(mapper::toResponse)
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
     }
 
@@ -127,7 +138,7 @@ public class AvaliacaoService implements IAvaliacaoService {
         avaliacao.setComentario(dto.comentario());
 
         Avaliacao updatedEntity = repository.save(avaliacao);
-        return mapToResponse(updatedEntity);
+        return mapper.toResponse(updatedEntity);
     }
 
     /**
@@ -144,17 +155,5 @@ public class AvaliacaoService implements IAvaliacaoService {
         }
         repository.deleteById(id);
         return id;
-    }
-
-    // Método auxiliar para converter Entity -> ResponseDTO manualmente para garantir os IDs
-    // Isso evita problemas de Lazy Loading e garante que o retorno tenha os IDs corretos
-    private AvaliacaoResponseDTO mapToResponse(Avaliacao entity) {
-        return new AvaliacaoResponseDTO(
-                entity.getId(),
-                entity.getNota(),
-                entity.getComentario(),
-                entity.getUsuario().getId(),
-                entity.getJogo().getId()
-        );
     }
 }

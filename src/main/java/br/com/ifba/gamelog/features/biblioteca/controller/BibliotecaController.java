@@ -17,9 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // NOVO IMPORT
-import org.springframework.data.domain.Pageable; // NOVO IMPORT
-import org.springframework.data.web.PageableDefault; // NOVO IMPORT
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +58,8 @@ public class BibliotecaController {
     @Operation(summary = "Adicionar à Biblioteca", description = "Adiciona um jogo na biblioteca do usuário com um status inicial.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Adicionado com sucesso."),
-            @ApiResponse(responseCode = "422", description = "Usuário já possui este jogo na biblioteca ou erro de validação.")
+            @ApiResponse(responseCode = "422", description = "Usuário já possui este jogo na biblioteca ou erro de validação."),
+            @ApiResponse(responseCode = "404", description = "Usuário ou Jogo não encontrados.")
     })
     @PostMapping(value = "/item",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -116,7 +117,8 @@ public class BibliotecaController {
      */
     @Operation(summary = "Listar por Usuário", description = "Lista todos os jogos na biblioteca de um usuário específico.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista do usuário recuperada com sucesso.")
+            @ApiResponse(responseCode = "200", description = "Lista do usuário recuperada com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado.")
     })
     @GetMapping(value = "/usuario/{usuarioId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<BibliotecaResponseDTO>> findAllByUsuario(@PathVariable UUID usuarioId) {

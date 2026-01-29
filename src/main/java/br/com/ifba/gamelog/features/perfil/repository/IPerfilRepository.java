@@ -10,9 +10,19 @@ import java.util.UUID;
 @Repository
 public interface IPerfilRepository extends JpaRepository<Perfil, Long> {
 
-    // Busca o perfil pelo ID do Usuário (que é UUID)
+    /**
+     * Busca o perfil associado a um usuário específico.
+     *
+     * @param usuarioId UUID do usuário.
+     * @return Optional contendo o perfil, se existir.
+     */
     Optional<Perfil> findByUsuarioId(UUID usuarioId);
 
-    // Verifica existência pelo ID do Usuário
+    /**
+     * Verifica se existe um perfil associado ao usuário informado.
+     *
+     * @param usuarioId UUID do usuário.
+     * @return true se existir, false caso contrário.
+     */
     boolean existsByUsuarioId(UUID usuarioId);
 }

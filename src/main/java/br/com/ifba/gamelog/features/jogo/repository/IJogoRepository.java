@@ -10,9 +10,13 @@ import java.util.UUID;
 @Repository
 public interface IJogoRepository extends JpaRepository<Jogo, UUID> {
 
-    // Verifica unicidade do ID externo
+    /**
+     * Verifica se já existe um jogo cadastrado com este ID Externo (RAWG).
+     */
     boolean existsByIdExterno(Long idExterno);
 
-    // Busca o jogo pelo ID externo (Necessário para a idempotência)
+    /**
+     * Busca um jogo pelo seu ID Externo.
+     */
     Optional<Jogo> findByIdExterno(Long idExterno);
 }

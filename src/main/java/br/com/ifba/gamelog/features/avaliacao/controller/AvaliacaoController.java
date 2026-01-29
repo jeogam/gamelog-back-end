@@ -9,7 +9,6 @@ import br.com.ifba.gamelog.infrastructure.exception.BusinessException;
 import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import br.com.ifba.gamelog.infrastructure.util.ResultError;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,9 +16,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // NOVO IMPORT
-import org.springframework.data.domain.Pageable; // NOVO IMPORT
-import org.springframework.data.web.PageableDefault; // NOVO IMPORT
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -78,7 +77,7 @@ public class AvaliacaoController {
      *
      * @return Lista de avaliações.
      */
-    @Operation(summary = "Listar Avaliações", description = "Recupera todas as avaliações cadastradas. Use /paginado para grandes volumes.")
+    @Operation(summary = "Listar Todas Avaliações", description = "Recupera todas as avaliações cadastradas. Use /paginado para grandes volumes.")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<AvaliacaoResponseDTO>> findAll() {
         return ResponseEntity.ok(avaliacaoService.findAll());
@@ -90,7 +89,7 @@ public class AvaliacaoController {
      * @param pageable Parâmetros de paginação (page, size, sort).
      * @return Uma página de avaliações.
      */
-    @Operation(summary = "Listar Avaliações Paginado", description = "Recupera uma lista de avaliações com paginação e ordenação (padrão: 10 itens por página, ordenado por data de criação).")
+    @Operation(summary = "Listar Avaliações Paginado", description = "Recupera uma lista de avaliações com paginação e ordenação (padrão: 10 itens por página).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Página recuperada com sucesso.",
                     content = @Content(schema = @Schema(implementation = Page.class)))
@@ -101,6 +100,17 @@ public class AvaliacaoController {
         return ResponseEntity.ok(avaliacaoService.findAllPaged(pageable));
     }
 
+    /**
+     * Busca avaliações de um jogo específico.
+     *
+     * @param jogoId UUID do jogo.
+     * @return Lista de avaliações do jogo.
+     */
+    @Operation(summary = "Listar Avaliações do Jogo", description = "Lista todas as avaliações vinculadas a um ID de Jogo específico.")
+    @GetMapping(value = "/jogo/{jogoId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<AvaliacaoResponseDTO>> findAllByJogo(@PathVariable UUID jogoId) {
+        return ResponseEntity.ok(avaliacaoService.findAllByJogo(jogoId));
+    }
 
     /**
      * Busca uma avaliação pelo ID.
