@@ -13,26 +13,19 @@ public class AvaliacaoMapper {
 
     private final ObjectMapperUtil objectMapperUtil;
 
-    /**
-     * Converte Entidade Avaliacao para ResponseDTO.
-     */
     public AvaliacaoResponseDTO toResponse(Avaliacao entity) {
-        // Mapeamento manual para garantir os IDs aninhados (Usuario e Jogo)
-        // O ModelMapper as vezes se perde com Lazy Loading se não configurado,
-        // então essa abordagem híbrida é mais segura.
+        // Esta abordagem manual é a mais segura para Records no Java 21
         return new AvaliacaoResponseDTO(
                 entity.getId(),
                 entity.getNota(),
                 entity.getComentario(),
-                entity.getUsuario().getId(),
-                entity.getJogo().getId()
+                entity.getUsuario().getId(), // Extrai o ID do Usuario associado
+                entity.getJogo().getId()      // Extrai o ID do Jogo associado
         );
     }
 
-    /**
-     * Converte DTO de criação para Entidade.
-     */
     public Avaliacao toEntity(AvaliacaoCriarRequestDTO dto) {
+        // Funciona porque Avaliacao.class é um POJO com construtor padrão
         return objectMapperUtil.map(dto, Avaliacao.class);
     }
 }

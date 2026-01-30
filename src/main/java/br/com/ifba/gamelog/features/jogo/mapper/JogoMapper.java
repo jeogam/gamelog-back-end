@@ -15,13 +15,26 @@ public class JogoMapper {
 
     /**
      * Converte a entidade Jogo para o DTO de resposta.
+     * Mapeamento manual para suportar Java Records (imutáveis).
      */
     public JogoResponseDTO toResponse(Jogo entity) {
-        return objectMapperUtil.map(entity, JogoResponseDTO.class);
+        if (entity == null) return null;
+
+        return new JogoResponseDTO(
+                entity.getId(),
+                entity.getIdExterno(),
+                entity.getTitulo(),
+                entity.getCapaUrl(),
+                entity.getDescricao(),
+                entity.getAnoLancamento(),
+                entity.getPlataformas(),
+                entity.getGenero()
+        );
     }
 
     /**
      * Converte o DTO de criação para a entidade Jogo.
+     * Aqui usamos o utilitário, pois a entidade Jogo é um POJO padrão.
      */
     public Jogo toEntity(JogoCriarRequestDTO dto) {
         return objectMapperUtil.map(dto, Jogo.class);

@@ -39,7 +39,7 @@ public class ObjectMapperUtil {
      * Mapeia um objeto de entrada para uma instância da classe especificada.
      */
     public <Input, Output> Output map(final Input object, final Class<Output> clazz) {
-        // Reconfigura para garantir consistência em cada chamada
+        // ESTE BLOCO ABAIXO RECONFIGURA O MAPPER EM CADA CHAMADA
         MODEL_MAPPER.getConfiguration()
                 .setAmbiguityIgnored(true)
                 .setMatchingStrategy(MatchingStrategies.STRICT)
