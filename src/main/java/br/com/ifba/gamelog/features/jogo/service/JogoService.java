@@ -38,13 +38,17 @@ public class JogoService implements IJogoService {
     @Override
     @Transactional
     public JogoResponseDTO save(JogoCriarRequestDTO dto) {
-        // Validação de unicidade do ID Externo (se fornecido)
-        if (dto.idExterno() != null && repository.existsByIdExterno(dto.idExterno())) {
-            throw new BusinessException(
-                    BusinessExceptionMessage.ATTRIBUTE_VALUE_ALREADY_EXISTS.getAttributeValueAlreadyExistsMessage("ID Externo")
-            );
+        // 1. VERIFICA SE JÁ EXISTE PELO ID EXTERNO
+        if (dto.idExterno() != null) {
+            var jogoExistente = repository.findByIdExterno(dto.idExterno());
+
+            // SE JÁ EXISTE: Não dá erro! Retorna o jogo que já estava lá.
+            if (jogoExistente.isPresent()) {
+                return mapper.toResponse(jogoExistente.get());
+            }
         }
 
+        // 2. SE NÃO EXISTE: Cria um novo normalmente
         Jogo entity = mapper.toEntity(dto);
         Jogo savedEntity = repository.save(entity);
         return mapper.toResponse(savedEntity);
