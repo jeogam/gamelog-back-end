@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JWTLoginFilter extends OncePerRequestFilter {
@@ -29,28 +30,38 @@ public class JWTLoginFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         Optional<String> tokenOpt = extractToken(request);
 
         if (tokenOpt.isPresent()) {
-            String email = tokenService.validateToken(tokenOpt.get());
+            String usuarioIdStr = tokenService.validateToken(tokenOpt.get()); // ✅ subject = UUID string
 
-            if (email != null) {
-                Usuario user = userRepository.findByEmail(email).orElse(null);
+            if (usuarioIdStr != null) {
+                try {
+                    UUID usuarioId = UUID.fromString(usuarioIdStr);
 
-                if (user != null) {
-                    // --- CORREÇÃO DO ERRO 500 AQUI ---
-                    // Se o papel estiver nulo no banco, assumimos "USUARIO" para não quebrar o sistema
-                    String roleName = (user.getPapel() != null) ? user.getPapel().name() : "USUARIO";
+                    Usuario user = userRepository.findById(usuarioId).orElse(null);
 
-                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleName));
+                    if (user != null) {
+                        String roleName = (user.getPapel() != null) ? user.getPapel().name() : "USUARIO";
+                        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + roleName));
 
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(user, null, authorities);
+                        var authToken = new UsernamePasswordAuthenticationToken(
+                                user, // principal
+                                null,
+                                authorities
+                        );
 
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                } catch (IllegalArgumentException e) {
+                    // Subject não era UUID válido
+                    SecurityContextHolder.clearContext();
                 }
             }
         }

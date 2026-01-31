@@ -23,7 +23,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -173,6 +174,10 @@ public class PerfilController {
         return ResponseEntity.ok().build();
     }
 
+    // =====================================================================
+    //  ÁREA CORRIGIDA: Usa getUsuarioIdLogado() em vez de @AuthenticationPrincipal
+    // =====================================================================
+
     /**
      * Recupera o perfil do usuário logado (baseado no token).
      */
@@ -182,8 +187,10 @@ public class PerfilController {
             @ApiResponse(responseCode = "404", description = "Perfil não encontrado (inconsistência de dados).")
     })
     @GetMapping("/meu-perfil")
-    public ResponseEntity<PerfilResponseDTO> meuPerfil(@AuthenticationPrincipal Usuario usuarioLogado) {
-        return ResponseEntity.ok(perfilService.findByUsuarioId(usuarioLogado.getId()));
+    public ResponseEntity<PerfilResponseDTO> meuPerfil() {
+        // ✅ CORREÇÃO: Pega o ID diretamente do contexto de segurança
+        UUID usuarioId = getUsuarioIdLogado();
+        return ResponseEntity.ok(perfilService.findByUsuarioId(usuarioId));
     }
 
     /**
@@ -196,9 +203,36 @@ public class PerfilController {
     })
     @PutMapping("/meu-perfil")
     public ResponseEntity<PerfilResponseDTO> updateMeuPerfil(
-            @AuthenticationPrincipal Usuario usuarioLogado,
             @RequestBody @Valid PerfilAtualizarMeusDadosRequestDTO dto) {
 
-        return ResponseEntity.ok(perfilService.updateByUsuarioId(usuarioLogado.getId(), dto));
+        // ✅ CORREÇÃO: Pega o ID diretamente do contexto de segurança
+        UUID usuarioId = getUsuarioIdLogado();
+        return ResponseEntity.ok(perfilService.updateByUsuarioId(usuarioId, dto));
+    }
+
+    /**
+     * Método auxiliar para extrair o ID do usuário (String) do token
+     * e converter para UUID de forma segura.
+     */
+    private UUID getUsuarioIdLogado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new BusinessException("Usuário não autenticado.");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        // Cenário 1: O Filtro carregou o Objeto Usuario (Seu caso atual)
+        if (principal instanceof Usuario) {
+            return ((Usuario) principal).getId();
+        }
+
+        // Cenário 2: O Filtro carregou apenas o ID String (Caso mude no futuro)
+        if (principal instanceof String) {
+            return UUID.fromString((String) principal);
+        }
+
+        throw new BusinessException("Tipo de autenticação desconhecido. Faça login novamente.");
     }
 }

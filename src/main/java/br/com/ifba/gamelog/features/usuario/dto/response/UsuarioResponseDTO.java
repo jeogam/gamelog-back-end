@@ -19,5 +19,8 @@ public record UsuarioResponseDTO(
         String email,
 
         @JsonProperty("papel")
-        UsuarioRole papel
+        UsuarioRole papel,
+
+        @JsonProperty("avatarImagem")
+        String avatarImagem
 ) {}

@@ -1,6 +1,9 @@
 package br.com.ifba.gamelog.features.usuario.repository;
 
 import br.com.ifba.gamelog.features.usuario.model.Usuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -25,4 +28,8 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, UUID> {
      * @return Optional contendo o usuário, se encontrado.
      */
     Optional<Usuario> findByEmail(String email);
+
+    @Override
+    @EntityGraph(attributePaths = {"perfil"})
+    Page<Usuario> findAll(Pageable pageable);
 }

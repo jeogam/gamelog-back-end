@@ -18,11 +18,19 @@ public class UsuarioMapper {
      */
     public UsuarioResponseDTO toResponse(Usuario entity) {
         if (entity == null) return null;
+
+        // ✅ Busca avatar do perfil, se existir
+        String avatarImagem = null;
+        if (entity.getPerfil() != null) {
+            avatarImagem = entity.getPerfil().getAvatarImagem();
+        }
+
         return new UsuarioResponseDTO(
                 entity.getId(),
                 entity.getNome(),
                 entity.getEmail(),
-                entity.getPapel()
+                entity.getPapel(),
+                avatarImagem // ✅ Mapeado
         );
     }
 

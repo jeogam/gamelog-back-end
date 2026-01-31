@@ -1,41 +1,50 @@
 package br.com.ifba.gamelog.infrastructure.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
-import java.util.Date;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TokenAuthenticationService {
 
-    // Em produção, usar application.properties
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long EXPIRATION_TIME = 864_000_000;
+    private final TokenService tokenService;
 
-    // ATUALIZAÇÃO: Receber o "role" como parâmetro
-    public String generateToken(String username, String role) {
-        return Jwts.builder()
-                .setSubject(username)
-                .claim("role", role)
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY)
-                .compact();
+    public Authentication getAuthentication(HttpServletRequest request) {
+        String token = recoverToken(request);
+
+        if (token != null) {
+            // 1. Valida o token e recupera o ID (Subject)
+            String usuarioId = tokenService.validateToken(token);
+
+            if (usuarioId != null) {
+                // 2. Recupera o Papel (Role)
+                String role = tokenService.getRoleFromToken(token);
+
+                // 3. Monta a autoridade com prefixo ROLE_ (Obrigatório para o Spring)
+                String authorityName = "ROLE_" + (role != null ? role : "USUARIO");
+
+                // 4. Retorna a autenticação pronta
+                return new UsernamePasswordAuthenticationToken(
+                        usuarioId,
+                        null,
+                        List.of(new SimpleGrantedAuthority(authorityName))
+                );
+            }
+        }
+        return null;
     }
 
-    public String validateToken(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
-        } catch (Exception e) {
+    private String recoverToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
+        return authHeader.replace("Bearer ", "");
     }
 }
