@@ -45,7 +45,7 @@ public class SecurityConfig {
                         // 4. Libera Leitura Pública (Jogos, Avaliações, Health Check)
                         .requestMatchers(HttpMethod.GET, "/api/v1/jogos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/avaliacoes/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
                         // 5. Libera endpoint de erro do Spring (Evita 403 em stacktraces)
                         .requestMatchers("/error").permitAll()
