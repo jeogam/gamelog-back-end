@@ -28,5 +28,8 @@ public record PerfilResponseDTO(
         String avatarImagem,
 
         @JsonProperty("usuarioId")
-        UUID usuarioId
+        UUID usuarioId,
+
+        @JsonProperty("papel")
+        String papel
 ) {}

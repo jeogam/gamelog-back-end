@@ -15,6 +15,8 @@ import br.com.ifba.gamelog.infrastructure.exception.BusinessExceptionMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,6 +126,7 @@ public class AvaliacaoService implements IAvaliacaoService {
 
     /**
      * Atualiza nota ou comentário de uma avaliação.
+     * Apenas atualiza se o ID informado corresponder a uma avaliação existente.
      *
      * @param dto Dados atualizados.
      * @return Avaliação atualizada.
@@ -134,6 +137,8 @@ public class AvaliacaoService implements IAvaliacaoService {
         Avaliacao avaliacao = repository.findById(dto.id())
                 .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
 
+        // Opcional: Aqui você também poderia verificar se o usuário logado é o dono antes de deixar editar
+
         avaliacao.setNota(dto.nota());
         avaliacao.setComentario(dto.comentario());
 
@@ -143,24 +148,45 @@ public class AvaliacaoService implements IAvaliacaoService {
 
     /**
      * Exclui uma avaliação.
+     * Implementa regra de negócio: Apenas o dono da avaliação ou Moderadores/Administradores
+     * podem realizar a exclusão.
      *
      * @param id Identificador da avaliação.
      * @return O ID da avaliação excluída.
+     * @throws BusinessException se a avaliação não existir ou o usuário não tiver permissão.
      */
     @Override
     @Transactional
     public UUID delete(UUID id) {
-        if (!repository.existsById(id)) {
-            throw new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage());
+        // 1. Busca a avaliação (necessário para checar a autoria)
+        Avaliacao avaliacao = repository.findById(id)
+                .orElseThrow(() -> new BusinessException(BusinessExceptionMessage.NOT_FOUND.getMessage()));
+
+        // 2. Obtém a autenticação atual do Security Context
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String usuarioLogadoId = auth.getName(); // Assume que o "subject" do token é o ID
+
+        // 3. Verifica se é ADMIN ou MODERADOR
+        boolean isElevatedUser = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("ADMINISTRADOR") || a.getAuthority().contains("MODERADOR"));
+
+        // 4. Verifica se é o DONO da avaliação
+        boolean isOwner = avaliacao.getUsuario().getId().toString().equals(usuarioLogadoId);
+
+        // 5. Regra de Segurança
+        if (!isOwner && !isElevatedUser) {
+            throw new BusinessException("Acesso negado: Você não tem permissão para excluir esta avaliação.");
         }
-        repository.deleteById(id);
+
+        repository.delete(avaliacao);
         return id;
     }
 
     /**
-     * Procura tudo do usuário
-     * @param usuarioId
-     * @return
+     * Busca todas as avaliações feitas por um usuário específico.
+     *
+     * @param usuarioId ID do usuário.
+     * @return Lista de DTOs das avaliações do usuário.
      */
     @Override
     @Transactional(readOnly = true)

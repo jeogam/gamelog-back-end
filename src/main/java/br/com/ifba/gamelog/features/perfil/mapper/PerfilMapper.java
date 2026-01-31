@@ -15,17 +15,24 @@ public class PerfilMapper {
 
     /**
      * Converte a entidade Perfil para o DTO de resposta.
-     * Mapeia manualmente para suportar o Record e resolver o ID do usuário de forma segura.
+     * Mapeia manualmente para suportar o Record e resolver o ID e Papel do usuário de forma segura.
      */
     public PerfilResponseDTO toResponse(Perfil entity) {
         if (entity == null) return null;
+
+        // ✅ Lógica para extrair o papel (Role)
+        String papel = "USUARIO";
+        if (entity.getUsuario() != null && entity.getUsuario().getPapel() != null) {
+            papel = entity.getUsuario().getPapel().name();
+        }
 
         return new PerfilResponseDTO(
                 entity.getId(),
                 entity.getNomeExibicao(),
                 entity.getBiografia(),
                 entity.getAvatarImagem(),
-                entity.getUsuario() != null ? entity.getUsuario().getId() : null
+                entity.getUsuario() != null ? entity.getUsuario().getId() : null,
+                papel
         );
     }
 
