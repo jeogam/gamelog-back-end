@@ -20,7 +20,8 @@ public class CorsConfig implements WebMvcConfigurer {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://gamelog-kappa.vercel.app"
+                "https://gamelog-kappa.vercel.app",
+                "https://gamelog-react.vercel.app"
         ));
 
         // Métodos e Headers
