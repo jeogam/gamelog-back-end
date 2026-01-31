@@ -2,12 +2,12 @@ package br.com.ifba.gamelog;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling; // Importante
-import org.springframework.scheduling.annotation.Scheduled;       // Importante
-import org.springframework.web.client.RestTemplate;               // Importante
+import org.springframework.scheduling.annotation.EnableScheduling; 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-@EnableScheduling // Habilita o agendamento de tarefas
+@EnableScheduling
 public class GameLogApplication {
 
     public static void main(String[] args) {
@@ -17,7 +17,7 @@ public class GameLogApplication {
     // Executa a cada 14 minutos (840.000 ms) para evitar que o Render "durma"
     @Scheduled(fixedRate = 840000)
     public void keepAlive() {
-        String url = "https://gamelog-back-end.onrender.com//";
+        String url = "https://gamelog-back-end.onrender.com/actuator/health";
         try {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getForObject(url, String.class);
