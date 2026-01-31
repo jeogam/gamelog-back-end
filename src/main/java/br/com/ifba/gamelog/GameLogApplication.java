@@ -17,7 +17,7 @@ public class GameLogApplication {
     // Executa a cada 14 minutos (840.000 ms) para evitar que o Render "durma"
     @Scheduled(fixedRate = 840000)
     public void keepAlive() {
-        String url = "https://gamelog-back-end.onrender.com/health";
+        String url = "https://gamelog-back-end.onrender.com//";
         try {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getForObject(url, String.class);
