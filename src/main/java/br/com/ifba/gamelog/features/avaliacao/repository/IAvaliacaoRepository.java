@@ -16,6 +16,13 @@ public interface IAvaliacaoRepository extends JpaRepository<Avaliacao, UUID> {
     boolean existsByUsuarioIdAndJogoId(UUID usuarioId, UUID jogoId);
 
     /**
+     * Busca avaliações só do usuário
+     * @param usuarioId
+     * @return
+     */
+    List<Avaliacao> findByUsuarioId(UUID usuarioId);
+
+    /**
      * Busca todas as avaliações vinculadas a um jogo específico.
      *
      * @param jogoId UUID do jogo.

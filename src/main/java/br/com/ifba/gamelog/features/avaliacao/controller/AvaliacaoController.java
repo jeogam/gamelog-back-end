@@ -113,6 +113,19 @@ public class AvaliacaoController {
     }
 
     /**
+     * Busca avaliações de um usuário específico.
+     * (Adicionado para corrigir a filtragem no perfil)
+     *
+     * @param usuarioId UUID do usuário.
+     * @return Lista de avaliações feitas pelo usuário.
+     */
+    @Operation(summary = "Listar Avaliações do Usuário", description = "Lista todas as avaliações feitas por um usuário específico.")
+    @GetMapping(value = "/usuario/{usuarioId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<AvaliacaoResponseDTO>> findAllByUsuario(@PathVariable UUID usuarioId) {
+        return ResponseEntity.ok(avaliacaoService.findAllByUsuario(usuarioId));
+    }
+
+    /**
      * Busca uma avaliação pelo ID.
      *
      * @param id UUID da avaliação.

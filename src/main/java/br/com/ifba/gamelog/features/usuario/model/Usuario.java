@@ -3,6 +3,7 @@ package br.com.ifba.gamelog.features.usuario.model;
 import br.com.ifba.gamelog.features.avaliacao.model.Avaliacao;
 import br.com.ifba.gamelog.features.biblioteca.model.Biblioteca;
 import br.com.ifba.gamelog.features.lista.model.ListaPersonalizada;
+import br.com.ifba.gamelog.features.perfil.model.Perfil; // Import necessário
 import br.com.ifba.gamelog.infrastructure.model.PersistenceEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -28,12 +29,16 @@ public class Usuario extends PersistenceEntity {
     @Column(name = "senha", nullable = false)
     private String senha;
 
-    // --- NOVO CAMPO ---
     @Enumerated(EnumType.STRING)
     @Column(name = "papel", nullable = false)
     private UsuarioRole papel = UsuarioRole.USUARIO;
 
     // --- Relacionamentos ---
+
+    // ✅ ESTE CAMPO ESTAVA FALTANDO E É NECESSÁRIO PARA O MAPPER FUNCIONAR
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Perfil perfil;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     @JsonIgnore

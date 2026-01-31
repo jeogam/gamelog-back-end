@@ -156,4 +156,17 @@ public class AvaliacaoService implements IAvaliacaoService {
         repository.deleteById(id);
         return id;
     }
+
+    /**
+     * Procura tudo do usuário
+     * @param usuarioId
+     * @return
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<AvaliacaoResponseDTO> findAllByUsuario(UUID usuarioId) {
+        return repository.findByUsuarioId(usuarioId).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
 }
